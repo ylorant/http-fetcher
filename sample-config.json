@@ -1,0 +1,11 @@
+{
+    "input": "http://example.com/horaro.txt",
+    "time": 1,
+    "split": "\n",
+    "output": [
+        {
+            "file": "output.txt",
+            "content": "$0 by $1"
+        }
+    ]
+}
