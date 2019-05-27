@@ -22,18 +22,26 @@ if(empty($config)) {
     die("Invalid config.\n");
 }
 
+$previousContents = null;
+
 while (true) {
     $contents = file_get_contents($config['input']);
-    $contents = explode($config['split'], $contents);
 
-    foreach($config['output'] as $output) {
-        $outputContents = $output['content'];
-
-        foreach($contents as $k => $part) {
-            $outputContents = str_replace("$". $k, $part, $outputContents);
-        }
+    if($contents != $previousContents) {
+        echo "Updating target files...\n";
+        $previousContents = $contents;
         
-        file_put_contents($output['file'], $outputContents);
+        $contents = explode($config['split'], $contents);
+
+        foreach($config['output'] as $output) {
+            $outputContents = $output['content'];
+
+            foreach($contents as $k => $part) {
+                $outputContents = str_replace("$". $k, $part, $outputContents);
+            }
+            
+            file_put_contents($output['file'], $outputContents);
+        }
     }
 
     sleep($config['time']);
