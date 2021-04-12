@@ -13,6 +13,8 @@ The config file contains 3 basic parameters and a complex one:
 - `output`: This is the complex setting, to configure each output file. It is an array of objects, each one defining an output file. The parameters of this object are as follows:
     - `file`: The file path to output to.
     - `content`: The content template. Use the `$X` marker to put text from the input file into the output file, according to its index in the split input text.
+    - `delay`: A delay to update the file (optional) only a set time after the source updates. Needs to be ginen in
+    a `DateInterval` format.
 
 Once you made your config file, you can just start the script like this :
 

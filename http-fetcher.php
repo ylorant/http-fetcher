@@ -23,10 +23,20 @@ if(empty($config)) {
 }
 
 $previousContents = null;
+$scheduledUpdates = [];
+$earliestUpdate = null;
+
+foreach($config['output'] as &$outputConfig) {
+    $outputConfig['id'] = uniqid("", true);
+    $outputConfig['delayOriginal'] = $outputConfig['delay'] ?? null;
+    $outputConfig['delay'] = new DateInterval($outputConfig['delay'] ?? "PT0S");
+}
 
 while (true) {
     $contents = file_get_contents($config['input']);
+    $now = new DateTimeImmutable();
 
+    // File update: prepare updating the actual files according to the given delays
     if($contents != $previousContents) {
         echo "Updating target files...\n";
         $previousContents = $contents;
@@ -39,10 +49,33 @@ while (true) {
             foreach($contents as $k => $part) {
                 $outputContents = str_replace("$". $k, $part, $outputContents);
             }
-            
-            file_put_contents($output['file'], $outputContents);
+
+            $scheduledUpdates[] = [
+                'file' => $output['file'],
+                'time' => $now->add($output['delay']),
+                'content' => $output['content']
+            ];
         }
     }
 
+    $scheduledUpdatesCopy = $scheduledUpdates;
+    foreach($scheduledUpdates as $i => $scheduledUpdate) {
+        if($now >= $scheduledUpdate['time'] || !file_exists($scheduledUpdate['file'])) {
+            $originalContent = null;
+            if(file_exists($scheduledUpdate['file'])) {
+                $originalContent = file_get_contents($scheduledUpdate['file']);
+            }
+
+            if($originalContent != $scheduledUpdate['content']) {
+                file_put_contents($scheduledUpdate['file'], $outputContents);
+                echo "Updating ". $scheduledUpdate['file']. "...\n";
+            }
+
+            unset($scheduledUpdatesCopy[$i]);
+        }
+    }
+
+    $scheduledUpdates = $scheduledUpdatesCopy;
+    
     sleep($config['time']);
 }

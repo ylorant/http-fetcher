@@ -6,6 +6,11 @@
         {
             "file": "output.txt",
             "content": "$0 by $1"
+        },
+        {
+            "file": "output-delayed.txt",
+            "content": "$0 by $1",
+            "delay": "PT10S"
         }
     ]
 }
