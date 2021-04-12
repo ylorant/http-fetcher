@@ -58,7 +58,8 @@ while (true) {
         }
     }
 
-    $scheduledUpdatesCopy = $scheduledUpdates;
+    // Handle actual file updates based off scheduled updates
+    $keptScheduledUpdates = $scheduledUpdates;
     foreach($scheduledUpdates as $i => $scheduledUpdate) {
         if($now >= $scheduledUpdate['time'] || !file_exists($scheduledUpdate['file'])) {
             $originalContent = null;
@@ -71,11 +72,11 @@ while (true) {
                 echo "Updating ". $scheduledUpdate['file']. "...\n";
             }
 
-            unset($scheduledUpdatesCopy[$i]);
+            unset($keptScheduledUpdates[$i]);
         }
     }
 
-    $scheduledUpdates = $scheduledUpdatesCopy;
+    $scheduledUpdates = $keptScheduledUpdates;
     
     sleep($config['time']);
 }
