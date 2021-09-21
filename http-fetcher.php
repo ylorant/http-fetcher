@@ -46,14 +46,28 @@ while (true) {
         foreach($config['output'] as $output) {
             $outputContents = $output['content'];
 
-            foreach($contents as $k => $part) {
-                $outputContents = str_replace("$". $k, $part, $outputContents);
+            $varCount = preg_match_all("/\\$([0-9]+)/", $outputContents, $matches);
+
+            if(!empty($varCount)) {
+                $replaces = 0;
+
+                foreach($matches[1] as $match) {
+                    if(isset($contents[$match])) {
+                        $outputContents = str_replace("$". $match, $contents[$match], $outputContents);
+                        $replaces++;
+                    }
+                }
+            }
+            
+            // Set the contents as empty if a var couldn't be fullfilled
+            if($replaces != count($matches[0])) {
+                $outputContents = "";
             }
 
             $scheduledUpdates[] = [
                 'file' => $output['file'],
                 'time' => $now->add($output['delay']),
-                'content' => $output['content']
+                'content' => $outputContents
             ];
         }
     }
@@ -67,9 +81,9 @@ while (true) {
                 $originalContent = file_get_contents($scheduledUpdate['file']);
             }
 
-            if($originalContent != $scheduledUpdate['content']) {
-                file_put_contents($scheduledUpdate['file'], $outputContents);
-                echo "Updating ". $scheduledUpdate['file']. "...\n";
+            if($originalContent !== $scheduledUpdate['content']) {
+                file_put_contents($scheduledUpdate['file'], $scheduledUpdate['content']);
+                echo "Updating ". $scheduledUpdate['file']. (empty($scheduledUpdate['content']) ? " (empty)" : "") . "...\n";
             }
 
             unset($keptScheduledUpdates[$i]);
