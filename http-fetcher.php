@@ -43,17 +43,38 @@ while (true) {
         
         $contents = explode($config['split'], $contents);
 
+        // Split items that need in-line splitting
+        if(!empty($config['itemSplit']) && is_array($config['itemSplit'])) {
+            foreach($config['itemSplit'] as $index => $splitString) {
+                if(isset($contents[$index])) {
+                    $contents[$index] = explode($splitString, $contents[$index]);
+                }
+            }
+        }
+
         foreach($config['output'] as $output) {
             $outputContents = $output['content'];
 
-            $varCount = preg_match_all("/\\$([0-9]+)/", $outputContents, $matches);
+            $varCount = preg_match_all("/\\$([0-9]+)(?:\\.([0-9]+))?/", $outputContents, $matches);
 
             if(!empty($varCount)) {
                 $replaces = 0;
+                arsort($matches[0]);
 
-                foreach($matches[1] as $match) {
-                    if(isset($contents[$match])) {
-                        $outputContents = str_replace("$". $match, $contents[$match], $outputContents);
+                foreach($matches[0] as $i => $match) {
+                    $firstIndex = $matches[1][$i];
+                    $secondIndex = $matches[2][$i] ?? null;
+
+                    if(isset($contents[$firstIndex])) {
+                        $replaceValue = $contents[$firstIndex];
+
+                        if(strlen($secondIndex) > 0 && isset($replaceValue[$secondIndex])) {
+                            $replaceValue = $replaceValue[$secondIndex];
+                        } elseif(strlen($secondIndex) > 0 && !isset($replaceValue[$secondIndex])) {
+                            continue;
+                        }
+                        
+                        $outputContents = str_replace($match, $replaceValue, $outputContents);
                         $replaces++;
                     }
                 }
